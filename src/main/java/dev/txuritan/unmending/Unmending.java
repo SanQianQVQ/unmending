@@ -4,6 +4,7 @@ import dev.txuritan.unmending.api.events.AnvilUpdateEvent;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
@@ -83,10 +84,9 @@ public class Unmending implements ModInitializer {
             removeMendingFromEquippedItems(newPlayer);
         });
 
-        // 阻止已有装备的经验修补附魔生效
-        ServerPlayerEvents.ALLOW_EXP_ORB_PICKUP.register((player, experienceOrb) -> {
+        // 使用 PlayerBlockBreakEvents 来阻止已有装备的经验修补附魔生效
+        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             preventMendingOnEquippedItems(player);
-            return true;
         });
     }
 
