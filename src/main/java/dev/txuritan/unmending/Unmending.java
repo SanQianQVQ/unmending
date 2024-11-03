@@ -82,6 +82,12 @@ public class Unmending implements ModInitializer {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
             removeMendingFromEquippedItems(newPlayer);
         });
+
+        // 阻止已有装备的经验修补附魔生效
+        ServerPlayerEvents.ALLOW_EXP_ORB_PICKUP.register((player, experienceOrb) -> {
+            preventMendingOnEquippedItems(player);
+            return true;
+        });
     }
 
     /**
@@ -110,6 +116,33 @@ public class Unmending implements ModInitializer {
             Map<Enchantment, Integer> enchantments = EnchantmentHelper.get(itemStack);
             enchantments.remove(Enchantments.MENDING);
             EnchantmentHelper.set(enchantments, itemStack);
+        }
+    }
+
+    /**
+     * 阻止玩家装备的 Mending 附魔生效
+     */
+    private void preventMendingOnEquippedItems(PlayerEntity player) {
+        // 处理玩家身上的所有装备（包括头部、胸部、腿部、脚部）
+        for (ItemStack itemStack : player.getArmorItems()) {
+            preventMending(itemStack);
+        }
+
+        // 处理玩家主手和副手的物品
+        ItemStack mainHandItem = player.getMainHandStack();
+        ItemStack offHandItem = player.getOffHandStack();
+
+        preventMending(mainHandItem);
+        preventMending(offHandItem);
+    }
+
+    /**
+     * 阻止指定物品上的 Mending 附魔生效
+     */
+    private void preventMending(ItemStack itemStack) {
+        if (itemStack != null && EnchantmentHelper.getLevel(Enchantments.MENDING, itemStack) > 0 && itemStack.isDamaged()) {
+            // 设置物品的损坏度保持不变，以阻止 Mending 生效
+            itemStack.setDamage(itemStack.getDamage());
         }
     }
 }
